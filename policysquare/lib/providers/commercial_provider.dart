@@ -5,6 +5,7 @@ import 'package:policysquare/data/models/claim_story.dart';
 import 'package:policysquare/data/models/underwriting_tip.dart';
 import 'package:policysquare/data/models/health_quote_request.dart';
 import 'package:policysquare/data/models/health_quote_response.dart';
+import 'package:policysquare/data/models/property_budget.dart';
 import 'package:policysquare/data/repositories/commercial_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,6 +22,7 @@ class CommercialProvider with ChangeNotifier {
   List<RiskAssessment> _assessmentHistory = [];
   List<Rfq> _rfqHistory = [];
   List<HealthQuoteResponse> _healthQuotes = [];
+  List<PropertyBudget> _budgetHistory = [];
 
   // Getters
   bool get isLoading => _isLoading;
@@ -30,6 +32,7 @@ class CommercialProvider with ChangeNotifier {
   List<RiskAssessment> get assessmentHistory => _assessmentHistory;
   List<Rfq> get rfqHistory => _rfqHistory;
   List<HealthQuoteResponse> get healthQuotes => _healthQuotes;
+  List<PropertyBudget> get budgetHistory => _budgetHistory;
 
   // --- Actions ---
 
@@ -125,9 +128,48 @@ class CommercialProvider with ChangeNotifier {
     try {
       _assessmentHistory = await _repository.getAssessmentHistory(mobile);
       _rfqHistory = await _repository.getUserRfqs(mobile);
+      _budgetHistory = await _repository.getPropertyBudgetHistory(mobile);
       _error = null;
     } catch (e) {
       _error = e.toString();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Submit Property Budget
+  Future<PropertyBudget?> submitPropertyBudget(PropertyBudget budget) async {
+    _setLoading(true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final mobile = prefs.getString('mobile_number');
+
+      budget.mobileNumber = mobile ?? budget.mobileNumber;
+
+      final result = await _repository.submitPropertyBudget(budget);
+      _error = null;
+      if (mobile != null) fetchHistory(mobile);
+      return result;
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<PropertyBudget?> updatePropertyBudget(
+    String id,
+    PropertyBudget budget,
+  ) async {
+    _setLoading(true);
+    try {
+      final result = await _repository.updatePropertyBudget(id, budget);
+      _error = null;
+      return result;
+    } catch (e) {
+      _error = e.toString();
+      return null;
     } finally {
       _setLoading(false);
     }

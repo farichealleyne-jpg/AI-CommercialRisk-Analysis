@@ -6,6 +6,7 @@ import 'package:policysquare/data/models/claim_story.dart';
 import 'package:policysquare/data/models/underwriting_tip.dart';
 import 'package:policysquare/data/models/health_quote_request.dart';
 import 'package:policysquare/data/models/health_quote_response.dart';
+import 'package:policysquare/data/models/property_budget.dart';
 
 class CommercialRepository {
   late final ApiService _apiService;
@@ -51,5 +52,25 @@ class CommercialRepository {
     HealthQuoteRequest request,
   ) async {
     return await _apiService.calculateHealthQuotes(request);
+  }
+
+  // --- Property Budget ---
+  Future<PropertyBudget> submitPropertyBudget(PropertyBudget budget) async {
+    return await _apiService.createPropertyBudget(budget);
+  }
+
+  Future<List<PropertyBudget>> getPropertyBudgetHistory(String mobile) async {
+    return await _apiService.getPropertyBudgetsByUser(mobile);
+  }
+
+  Future<PropertyBudget> getPropertyBudgetById(String id) async {
+    return await _apiService.getPropertyBudgetById(id);
+  }
+
+  Future<PropertyBudget> updatePropertyBudget(
+    String id,
+    PropertyBudget budget,
+  ) async {
+    return await _apiService.updatePropertyBudget(id, budget);
   }
 }
