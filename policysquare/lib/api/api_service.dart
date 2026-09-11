@@ -6,6 +6,7 @@ import 'package:policysquare/data/models/claim_story.dart';
 import 'package:policysquare/data/models/underwriting_tip.dart';
 import 'package:policysquare/data/models/health_quote_request.dart';
 import 'package:policysquare/data/models/health_quote_response.dart';
+import 'package:policysquare/data/models/property_budget.dart';
 
 part 'api_service.g.dart';
 
@@ -45,5 +46,23 @@ abstract class ApiService {
   @POST("/api/health/quotes/calculate")
   Future<List<HealthQuoteResponse>> calculateHealthQuotes(
     @Body() HealthQuoteRequest request,
+  );
+
+  // --- Property Budget ---
+  @POST("/api/property-budgets")
+  Future<PropertyBudget> createPropertyBudget(@Body() PropertyBudget budget);
+
+  @GET("/api/property-budgets/user/{mobile}")
+  Future<List<PropertyBudget>> getPropertyBudgetsByUser(
+    @Path("mobile") String mobile,
+  );
+
+  @GET("/api/property-budgets/{id}")
+  Future<PropertyBudget> getPropertyBudgetById(@Path("id") String id);
+
+  @PUT("/api/property-budgets/{id}")
+  Future<PropertyBudget> updatePropertyBudget(
+    @Path("id") String id,
+    @Body() PropertyBudget budget,
   );
 }

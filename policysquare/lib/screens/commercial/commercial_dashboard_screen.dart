@@ -4,6 +4,7 @@ import 'package:policysquare/screens/commercial/underwriting_tips_screen.dart';
 
 import 'package:policysquare/screens/commercial/rfq_screen.dart';
 import 'package:policysquare/screens/commercial/inspection_selection_screen.dart';
+import 'package:policysquare/screens/commercial/property_budget_screen.dart';
 
 class CommercialDashboardScreen extends StatelessWidget {
   const CommercialDashboardScreen({super.key});
@@ -76,6 +77,20 @@ class CommercialDashboardScreen extends StatelessWidget {
                         builder: (_) => const UnderwritingTipsScreen(
                           category: 'Commercial',
                         ),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardCard(
+                  context,
+                  title: 'Property Budget',
+                  icon: Icons.account_balance_wallet,
+                  color: Colors.teal,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PropertyBudgetScreen(),
                       ),
                     );
                   },
