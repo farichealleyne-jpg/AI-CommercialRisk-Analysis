@@ -7,6 +7,10 @@ import 'package:policysquare/data/models/underwriting_tip.dart';
 import 'package:policysquare/data/models/health_quote_request.dart';
 import 'package:policysquare/data/models/health_quote_response.dart';
 import 'package:policysquare/data/models/property_budget.dart';
+import 'package:policysquare/data/models/property.dart';
+import 'package:policysquare/data/models/inspection_visit.dart';
+import 'package:policysquare/data/models/action_item.dart';
+import 'package:policysquare/data/models/dashboard_summary.dart';
 
 class CommercialRepository {
   late final ApiService _apiService;
@@ -72,5 +76,56 @@ class CommercialRepository {
     PropertyBudget budget,
   ) async {
     return await _apiService.updatePropertyBudget(id, budget);
+  }
+
+  // --- Properties ---
+  Future<Property> createProperty(Property property) async {
+    return await _apiService.createProperty(property);
+  }
+
+  Future<List<Property>> getProperties(String mobile) async {
+    return await _apiService.getPropertiesByUser(mobile);
+  }
+
+  Future<Property> updateProperty(String code, Property property) async {
+    return await _apiService.updateProperty(code, property);
+  }
+
+  Future<void> deleteProperty(String code) async {
+    return await _apiService.deleteProperty(code);
+  }
+
+  // --- Inspection visits ---
+  Future<InspectionVisit> createVisit(InspectionVisit visit) async {
+    return await _apiService.createVisit(visit);
+  }
+
+  Future<List<InspectionVisit>> getVisits(String mobile) async {
+    return await _apiService.getVisitsByUser(mobile);
+  }
+
+  Future<InspectionVisit> updateVisit(String id, InspectionVisit visit) async {
+    return await _apiService.updateVisit(id, visit);
+  }
+
+  // --- Action items ---
+  Future<ActionItem> createAction(ActionItem action) async {
+    return await _apiService.createAction(action);
+  }
+
+  Future<List<ActionItem>> getActions(String mobile) async {
+    return await _apiService.getActionsByUser(mobile);
+  }
+
+  Future<List<ActionItem>> getActionsByVisit(String visitId) async {
+    return await _apiService.getActionsByVisit(visitId);
+  }
+
+  Future<ActionItem> updateAction(String id, ActionItem action) async {
+    return await _apiService.updateAction(id, action);
+  }
+
+  Future<DashboardSummary> getDashboardSummary(String mobile) async {
+    return await _apiService.getDashboardSummary(mobile);
   }
 }

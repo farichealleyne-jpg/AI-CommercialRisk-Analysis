@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:policysquare/screens/commercial/inspection_report_screen.dart';
 import 'package:policysquare/screens/commercial/risk_assessment_history_screen.dart';
 import 'package:policysquare/screens/commercial/property_budget_screen.dart';
+import 'package:policysquare/screens/inspection/property_manager_dashboard_screen.dart';
 
 class InspectionSelectionScreen extends StatelessWidget {
   const InspectionSelectionScreen({super.key});
@@ -18,6 +19,23 @@ class InspectionSelectionScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            _buildWideCard(
+              context,
+              title: 'Property Management',
+              subtitle:
+                  'Attendance visits, deficiencies, approvals and property register',
+              icon: Icons.apartment,
+              color: const Color(0xFF1565C0),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PropertyManagerDashboardScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
             _buildWideCard(
               context,
               title: 'Start Risk Assessment',

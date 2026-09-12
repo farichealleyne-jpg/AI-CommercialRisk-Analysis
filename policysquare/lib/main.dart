@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:policysquare/config/theme.dart';
 import 'package:policysquare/providers/chat_provider.dart';
 import 'package:policysquare/providers/commercial_provider.dart';
+import 'package:policysquare/providers/inspection_provider.dart';
 import 'package:policysquare/screens/auth/login_screen.dart';
 import 'package:policysquare/screens/main_screen.dart';
 import 'package:policysquare/screens/commercial/inspection_selection_screen.dart';
@@ -48,6 +49,7 @@ class _PolicySquareAppState extends State<PolicySquareApp> {
             return provider;
           },
         ),
+        ChangeNotifierProvider(create: (_) => InspectionProvider()),
       ],
       child: MaterialApp(
         title: 'PolicySquare',

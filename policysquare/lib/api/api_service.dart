@@ -7,6 +7,10 @@ import 'package:policysquare/data/models/underwriting_tip.dart';
 import 'package:policysquare/data/models/health_quote_request.dart';
 import 'package:policysquare/data/models/health_quote_response.dart';
 import 'package:policysquare/data/models/property_budget.dart';
+import 'package:policysquare/data/models/property.dart';
+import 'package:policysquare/data/models/inspection_visit.dart';
+import 'package:policysquare/data/models/action_item.dart';
+import 'package:policysquare/data/models/dashboard_summary.dart';
 
 part 'api_service.g.dart';
 
@@ -65,4 +69,55 @@ abstract class ApiService {
     @Path("id") String id,
     @Body() PropertyBudget budget,
   );
+
+  // --- Properties ---
+  @POST("/api/properties")
+  Future<Property> createProperty(@Body() Property property);
+
+  @GET("/api/properties/user/{mobile}")
+  Future<List<Property>> getPropertiesByUser(@Path("mobile") String mobile);
+
+  @PUT("/api/properties/{code}")
+  Future<Property> updateProperty(
+    @Path("code") String code,
+    @Body() Property property,
+  );
+
+  @DELETE("/api/properties/{code}")
+  Future<void> deleteProperty(@Path("code") String code);
+
+  // --- Inspection visits ---
+  @POST("/api/visits")
+  Future<InspectionVisit> createVisit(@Body() InspectionVisit visit);
+
+  @GET("/api/visits/user/{mobile}")
+  Future<List<InspectionVisit>> getVisitsByUser(@Path("mobile") String mobile);
+
+  @GET("/api/visits/{id}")
+  Future<InspectionVisit> getVisitById(@Path("id") String id);
+
+  @PUT("/api/visits/{id}")
+  Future<InspectionVisit> updateVisit(
+    @Path("id") String id,
+    @Body() InspectionVisit visit,
+  );
+
+  // --- Action items ---
+  @POST("/api/actions")
+  Future<ActionItem> createAction(@Body() ActionItem action);
+
+  @GET("/api/actions/user/{mobile}")
+  Future<List<ActionItem>> getActionsByUser(@Path("mobile") String mobile);
+
+  @GET("/api/actions/visit/{visitId}")
+  Future<List<ActionItem>> getActionsByVisit(@Path("visitId") String visitId);
+
+  @PUT("/api/actions/{id}")
+  Future<ActionItem> updateAction(
+    @Path("id") String id,
+    @Body() ActionItem action,
+  );
+
+  @GET("/api/actions/summary/{mobile}")
+  Future<DashboardSummary> getDashboardSummary(@Path("mobile") String mobile);
 }
