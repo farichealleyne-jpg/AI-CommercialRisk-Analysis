@@ -263,6 +263,15 @@ class InspectionGuide {
     'Lease review',
   ];
 
+  static const List<String> approvalStatuses = [
+    'NOT_REQUIRED',
+    'PENDING',
+    'APPROVED',
+    'DECLINED',
+  ];
+
+  static const List<String> costClassifications = ['OPERATING', 'CAPITAL'];
+
   static String statusLabel(String? raw) {
     switch (raw) {
       case 'QUOTE_REQUESTED':

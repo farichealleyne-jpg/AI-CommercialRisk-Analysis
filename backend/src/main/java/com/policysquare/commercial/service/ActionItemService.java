@@ -34,7 +34,29 @@ public class ActionItemService {
         if (action.getId() == null || action.getId().isEmpty()) {
             action.setId(nextActionId(action));
         }
+        applyApprovalRule(action);
         return repository.save(action);
+    }
+
+    /**
+     * Capital work cannot sit as "no approval needed". Promote it to pending,
+     * but never overwrite an approval decision someone has already recorded.
+     */
+    private void applyApprovalRule(ActionItem action) {
+        boolean undecided = action.getApprovalStatus() == null
+                || action.getApprovalStatus() == ActionItem.ApprovalStatus.NOT_REQUIRED;
+        if (action.isRequiresCapitalReview() && undecided) {
+            action.setApprovalStatus(ActionItem.ApprovalStatus.PENDING);
+        } else if (action.getApprovalStatus() == null) {
+            action.setApprovalStatus(ActionItem.ApprovalStatus.NOT_REQUIRED);
+        }
+        // Below the threshold a manager may still classify work as capital
+        // (part of a project, say); above it, operating is not an option.
+        if (action.isRequiresCapitalReview()) {
+            action.setCostClassification(ActionItem.CostClassification.CAPITAL);
+        } else if (action.getCostClassification() == null) {
+            action.setCostClassification(ActionItem.CostClassification.OPERATING);
+        }
     }
 
     private String nextActionId(ActionItem action) {
@@ -88,6 +110,7 @@ public class ActionItemService {
                     if (updated.getVendorRef() != null) existing.setVendorRef(updated.getVendorRef());
                     if (updated.getEvidenceLink() != null) existing.setEvidenceLink(updated.getEvidenceLink());
                     if (updated.getNotes() != null) existing.setNotes(updated.getNotes());
+                    applyApprovalRule(existing);
                     return repository.save(existing);
                 })
                 .orElseThrow(() -> new RuntimeException("Action item not found with id " + id));
