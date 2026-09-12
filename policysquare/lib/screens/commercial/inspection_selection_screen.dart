@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:policysquare/screens/commercial/inspection_report_screen.dart';
 import 'package:policysquare/screens/commercial/risk_assessment_history_screen.dart';
+import 'package:policysquare/screens/commercial/property_budget_screen.dart';
 
 class InspectionSelectionScreen extends StatelessWidget {
   const InspectionSelectionScreen({super.key});
@@ -44,6 +45,22 @@ class InspectionSelectionScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => const RiskAssessmentHistoryScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildWideCard(
+              context,
+              title: 'Property Budget',
+              subtitle: 'Itemize repair and maintenance costs for a property',
+              icon: Icons.account_balance_wallet,
+              color: Colors.teal,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PropertyBudgetScreen(),
                   ),
                 );
               },
