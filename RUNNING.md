@@ -79,6 +79,11 @@ works from inside the `backend` folder. Check with `cd` (it prints where you are
 add its `bin` folder to PATH, or type the full path instead, for example
 `C:\Users\Public\Desktop\flutter\bin\flutter run -d chrome`.
 
+**Backend fails with a wall of compile errors mentioning `lombok`** — your JDK is
+newer than the Lombok version the build resolves. Update to the latest Lombok by
+bumping `<lombok.version>` in `backend/pom.xml`; if no release supports your JDK yet,
+install JDK 21 (an LTS release) and build with that instead.
+
 **App opens but everything is empty or errors** — the backend isn't running. Check
 Terminal 1 for `Started CommercialServiceApplication`, and restart it if it exited.
 
