@@ -10,8 +10,17 @@ Install these, in this order. Each has an installer you click through.
 | What | Where | Check it worked |
 | --- | --- | --- |
 | Git | https://git-scm.com/download/win | `git --version` |
-| Java (JDK 21 or newer) | https://www.oracle.com/java/technologies/downloads/ | `java -version` |
+| Java **JDK 21** (see note) | https://www.oracle.com/java/technologies/downloads/ | `java -version` |
 | Flutter | https://flutter.dev/docs/get-started/install | `flutter --version` |
+
+**Use JDK 21 specifically, not the newest Java.** The build depends on Lombok, which
+hooks into compiler internals and therefore has to be updated for each new JDK. On
+JDK 26 it silently generates nothing and the build dies with dozens of `variable X not
+initialized in the default constructor` errors. JDK 21 is a long-term-support release
+and is what this project targets. Pick the **JDK 21** tab on the Oracle download page.
+
+If you already installed a newer JDK, you do not have to remove it — install 21 as
+well and point `JAVA_HOME` at it (see *When something goes wrong* below).
 
 "Check it worked" means: open a terminal (Windows key, type `cmd`, press Enter), type
 that command, press Enter. A version number means it's installed. `'x' is not
@@ -79,10 +88,16 @@ works from inside the `backend` folder. Check with `cd` (it prints where you are
 add its `bin` folder to PATH, or type the full path instead, for example
 `C:\Users\Public\Desktop\flutter\bin\flutter run -d chrome`.
 
-**Backend fails with a wall of compile errors mentioning `lombok`** — your JDK is
-newer than the Lombok version the build resolves. Update to the latest Lombok by
-bumping `<lombok.version>` in `backend/pom.xml`; if no release supports your JDK yet,
-install JDK 21 (an LTS release) and build with that instead.
+**`variable <something> not initialized in the default constructor`, many times over**
+— you are building on a JDK that Lombok does not support yet, so the constructors it
+normally writes for you were never generated. Build on JDK 21 instead.
+
+To use JDK 21 while a newer JDK stays installed, set `JAVA_HOME` to the JDK 21 folder
+(typically `C:\Program Files\Java\jdk-21`): Windows key → search *Environment
+Variables* → **Edit the system environment variables** → **Environment Variables** →
+under *User variables* click **New** → name `JAVA_HOME`, value that folder path. Open
+a **new** terminal afterwards; Maven reads `JAVA_HOME` in preference to your PATH.
+Confirm with `mvnw.cmd -version`, which prints the JDK it will actually use.
 
 **App opens but everything is empty or errors** — the backend isn't running. Check
 Terminal 1 for `Started CommercialServiceApplication`, and restart it if it exited.
