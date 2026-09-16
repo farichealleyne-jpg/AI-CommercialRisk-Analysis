@@ -1,0 +1,16 @@
+period,meter,utility,system,consumption,cost,unit_rate
+2026-07,Main Electric - Building A,electricity,HVAC,45896.3,6700.86,0.146
+2026-07,Lighting Panel L1,electricity,Lighting,10495.2,1532.29,0.146
+2026-07,Tenant Submeter - Suite 200,electricity,Plug Loads,7040.5,1027.91,0.146
+2026-07,Boiler Gas Service,gas,Heating,290.0,371.14,1.28
+2026-07,Irrigation & Domestic Water,water,Domestic Water,208703.5,2295.74,0.011
+2026-08,Main Electric - Building A,electricity,HVAC,44155.6,6446.71,0.146
+2026-08,Lighting Panel L1,electricity,Lighting,10278.3,1500.64,0.146
+2026-08,Tenant Submeter - Suite 200,electricity,Plug Loads,6882.2,1004.8,0.146
+2026-08,Boiler Gas Service,gas,Heating,443.9,568.18,1.28
+2026-08,Irrigation & Domestic Water,water,Domestic Water,203185.0,2235.04,0.011
+2026-09,Main Electric - Building A,electricity,HVAC,37878.4,5530.25,0.146
+2026-09,Lighting Panel L1,electricity,Lighting,9962.4,1454.51,0.146
+2026-09,Tenant Submeter - Suite 200,electricity,Plug Loads,6644.1,970.03,0.146
+2026-09,Boiler Gas Service,gas,Heating,931.0,1191.65,1.28
+2026-09,Irrigation & Domestic Water,water,Domestic Water,187916.0,2067.08,0.011

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy &amp; Utility Tracker</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <h1>Energy <span>Monitoring</span></h1>
+      <p>You can't manage what you can't see.</p>
+    </div>
+    <div class="masthead-controls">
+      <select id="site-select" aria-label="Site"></select>
+      <select id="range-select" aria-label="History shown">
+        <option value="12" selected>Last 12 months</option>
+        <option value="6">Last 6 months</option>
+        <option value="24">Last 24 months</option>
+      </select>
+      <button id="export-btn" type="button">Export CSV</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="loading" class="loading">Loading meter data&hellip;</div>
+
+  <div id="dashboard" hidden>
+    <h2 class="section-title" id="period-title">This month</h2>
+    <section class="grid grid-kpi" id="kpi-row"></section>
+
+    <h2 class="section-title">Where the energy goes</h2>
+    <section class="grid grid-charts">
+      <article class="card">
+        <h2>Energy use over time</h2>
+        <p class="card-hint" id="series-hint">Electricity, kWh per month. The dashed line is the next three months, projected.</p>
+        <svg id="series-chart" class="chart" viewBox="0 0 720 280" role="img" aria-label="Monthly energy use"></svg>
+      </article>
+      <article class="card">
+        <h2>Energy use by system</h2>
+        <p class="card-hint">Share of this month's electricity.</p>
+        <svg id="donut-chart" class="chart" viewBox="0 0 240 180" role="img" aria-label="Energy use by system"></svg>
+        <ul class="legend" id="donut-legend"></ul>
+      </article>
+    </section>
+
+    <h2 class="section-title">Early detection</h2>
+    <section class="grid grid-halves">
+      <article class="card">
+        <h2>Exceptions worth a look</h2>
+        <p class="card-hint">Meters running away from their own six-month normal.</p>
+        <ul class="alerts" id="alert-list"></ul>
+      </article>
+      <article class="card">
+        <h2>Biggest movers this month</h2>
+        <p class="card-hint">Month-over-month change, ranked by dollars.</p>
+        <table>
+          <thead>
+            <tr><th>Meter</th><th class="num">Change</th><th class="num">Cost impact</th></tr>
+          </thead>
+          <tbody id="movers-body"></tbody>
+        </table>
+      </article>
+    </section>
+
+    <h2 class="section-title">Budgeting &amp; cost control</h2>
+    <section class="grid grid-halves">
+      <article class="card">
+        <h2>Next three months, projected</h2>
+        <p class="card-hint" id="forecast-basis">Based on the same months last year, adjusted for this year's trend.</p>
+        <table>
+          <thead>
+            <tr><th>Month</th><th class="num">Projected use</th><th class="num">Projected cost</th></tr>
+          </thead>
+          <tbody id="forecast-body"></tbody>
+        </table>
+      </article>
+      <article class="card">
+        <h2>Latest readings</h2>
+        <p class="card-hint">Most recent month, by meter.</p>
+        <table>
+          <thead>
+            <tr><th>Meter</th><th>Utility</th><th class="num">Use</th><th class="num">Cost</th></tr>
+          </thead>
+          <tbody id="readings-body"></tbody>
+        </table>
+      </article>
+    </section>
+
+    <h2 class="section-title">Get data in</h2>
+    <section class="grid grid-halves">
+      <article class="card">
+        <h2>Record a reading</h2>
+        <p class="card-hint">One meter, one billing month. Re-entering a month overwrites it.</p>
+        <form id="reading-form">
+          <div class="form-row">
+            <div>
+              <label for="reading-meter">Meter</label>
+              <select id="reading-meter" required></select>
+            </div>
+            <div>
+              <label for="reading-period">Billing month</label>
+              <input id="reading-period" type="month" required>
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:12px">
+            <div>
+              <label for="reading-consumption">Consumption</label>
+              <input id="reading-consumption" type="number" step="0.01" min="0" required placeholder="48000">
+            </div>
+            <div>
+              <label for="reading-cost">Cost (optional)</label>
+              <input id="reading-cost" type="number" step="0.01" min="0" placeholder="7104.00">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" type="submit">Save reading</button>
+            <span class="form-note" id="reading-note"></span>
+          </div>
+        </form>
+      </article>
+      <article class="card">
+        <h2>Import a bill history</h2>
+        <p class="card-hint">
+          CSV columns: <code>period, meter, utility, system, consumption, cost, unit_rate</code>.
+          Unknown meters are created on import.
+        </p>
+        <form id="import-form">
+          <textarea id="import-text" spellcheck="false"
+            placeholder="period,meter,utility,system,consumption,cost,unit_rate&#10;2026-09,Chiller Plant,electricity,HVAC,48210,7135.08,0.148"></textarea>
+          <div class="form-actions">
+            <button class="btn" type="submit">Import</button>
+            <button class="btn secondary" type="button" id="import-file-btn">Choose file&hellip;</button>
+            <input id="import-file" type="file" accept=".csv,text/csv" hidden>
+            <span class="form-note" id="import-note"></span>
+          </div>
+        </form>
+      </article>
+    </section>
+
+    <div class="value-strip">
+      <div><strong>Lower costs</strong>Waste you can see is waste you can price.</div>
+      <div><strong>Reduce risk</strong>A spike is often a fault before it is a bill.</div>
+      <div><strong>Improve performance</strong>Every meter judged against its own normal.</div>
+      <div><strong>Build a sustainable future</strong>Consumption converted to CO&#8322;e.</div>
+    </div>
+  </div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
