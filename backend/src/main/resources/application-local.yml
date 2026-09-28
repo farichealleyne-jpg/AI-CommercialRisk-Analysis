@@ -1,0 +1,12 @@
+# Run with: mvnw spring-boot:run -Dspring-boot.run.profiles=local
+# Uses an embedded file-backed database so no PostgreSQL install is needed.
+# Data is written to backend/data/policysquare.mv.db and survives restarts.
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/policysquare;AUTO_SERVER=TRUE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update

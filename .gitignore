@@ -40,3 +40,6 @@ __pycache__/
 
 # Environment
 .env
+
+# Local embedded database (local profile)
+backend/data/

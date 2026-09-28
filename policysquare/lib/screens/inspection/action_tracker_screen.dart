@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:policysquare/config/inspection_guide.dart';
 import 'package:policysquare/data/models/action_item.dart';
 import 'package:policysquare/providers/inspection_provider.dart';
+import 'package:policysquare/screens/inspection/action_detail_screen.dart';
 
 /// Deficiency tracker: every unresolved issue, from discovery through quote,
 /// approval, completion and verification.
@@ -22,7 +23,6 @@ class _ActionTrackerScreenState extends State<ActionTrackerScreen> {
   bool _openOnly = true;
 
   static final _currency = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
-  static final _isoDate = DateFormat('yyyy-MM-dd');
 
   static Color priorityColor(String? priority) => switch (priority) {
         'CRITICAL' => const Color(0xFFC62828),
@@ -49,7 +49,7 @@ class _ActionTrackerScreenState extends State<ActionTrackerScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showActionDialog(context),
+        onPressed: () => _openAction(context),
         backgroundColor: const Color(0xFF1565C0),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
@@ -107,7 +107,7 @@ class _ActionTrackerScreenState extends State<ActionTrackerScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _showActionDialog(context, existing: action),
+        onTap: () => _openAction(context, existing: action),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -176,23 +176,52 @@ class _ActionTrackerScreenState extends State<ActionTrackerScreen> {
                         icon: Icons.schedule),
                   if (action.leaseReview == true)
                     _chip('lease review', Colors.teal),
+                  if (action.approvalStatus == 'PENDING')
+                    _chip('approval pending', const Color(0xFF6A1B9A),
+                        icon: Icons.how_to_reg),
+                  if (action.approvalStatus == 'APPROVED')
+                    _chip('approved', const Color(0xFF2E7D32),
+                        icon: Icons.check_circle_outline),
+                  if (action.approvalStatus == 'DECLINED')
+                    _chip('declined', const Color(0xFFC62828),
+                        icon: Icons.block),
                 ],
               ),
-              if (action.responsibleParty?.isNotEmpty == true ||
-                  action.targetCompletion != null) ...[
+              if (_meta(action).isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                  [
-                    if (action.responsibleParty?.isNotEmpty == true)
-                      'Responsible: ${action.responsibleParty}',
-                    if (action.targetCompletion != null)
-                      'Target: ${_formatDate(action.targetCompletion)}',
-                  ].join('  ·  '),
+                  _meta(action).join('  ·  '),
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Whichever of responsibility, dates and sign-off the item has reached.
+  List<String> _meta(ActionItem action) => [
+        if (action.responsibleParty?.isNotEmpty == true)
+          'Responsible: ${action.responsibleParty}',
+        if (action.targetCompletion != null)
+          'Target: ${_formatDate(action.targetCompletion)}',
+        if (action.completionDate != null)
+          'Completed: ${_formatDate(action.completionDate)}',
+        if (action.verifiedBy?.isNotEmpty == true)
+          'Verified by ${action.verifiedBy}',
+        if (action.vendorRef?.isNotEmpty == true) action.vendorRef!,
+      ];
+
+  Future<void> _openAction(BuildContext context, {ActionItem? existing}) {
+    return Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ActionDetailScreen(
+          existing: existing,
+          visitId: widget.visitId,
+          propertyCode: widget.propertyCode,
         ),
       ),
     );
@@ -231,331 +260,4 @@ class _ActionTrackerScreenState extends State<ActionTrackerScreen> {
     );
   }
 
-  Future<void> _showActionDialog(
-    BuildContext context, {
-    ActionItem? existing,
-  }) async {
-    final provider = context.read<InspectionProvider>();
-    final messenger = ScaffoldMessenger.of(context);
-    final isEdit = existing != null;
-
-    String? propertyCode = existing?.propertyCode ??
-        widget.propertyCode ??
-        (provider.properties.isNotEmpty ? provider.properties.first.code : null);
-    String? visitId = existing?.visitId ?? widget.visitId;
-    String category = InspectionGuide.categories.contains(existing?.category)
-        ? existing!.category!
-        : InspectionGuide.categories.first;
-    String priority = existing?.priority ?? 'MEDIUM';
-    String status = existing?.status ?? 'OPEN';
-    String responsible = InspectionGuide.responsibleParties
-            .contains(existing?.responsibleParty)
-        ? existing!.responsibleParty!
-        : InspectionGuide.responsibleParties.first;
-    bool safetyHazard = existing?.safetyHazard ?? false;
-    bool leaseReview = existing?.leaseReview ?? false;
-    DateTime? targetDate = existing?.targetCompletion == null
-        ? null
-        : DateTime.tryParse(existing!.targetCompletion!);
-
-    final locationController =
-        TextEditingController(text: existing?.location ?? '');
-    final issueController = TextEditingController(text: existing?.issue ?? '');
-    final costController = TextEditingController(
-      text: existing?.estimatedCost?.toStringAsFixed(0) ?? '',
-    );
-    final ownerController =
-        TextEditingController(text: existing?.actionOwner ?? '');
-    final notesController = TextEditingController(text: existing?.notes ?? '');
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) {
-          final cost = double.tryParse(costController.text.trim());
-          final overThreshold =
-              cost != null && cost > InspectionGuide.capitalReviewThreshold;
-
-          return AlertDialog(
-            title: Text(isEdit ? 'Edit action' : 'Add action'),
-            content: SizedBox(
-              width: 400,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (!isEdit && widget.visitId == null) ...[
-                      DropdownButtonFormField<String>(
-                        initialValue: propertyCode,
-                        decoration:
-                            const InputDecoration(labelText: 'Property'),
-                        items: provider.properties
-                            .map((p) => DropdownMenuItem(
-                                  value: p.code,
-                                  child: Text('${p.code} · ${p.name}'),
-                                ))
-                            .toList(),
-                        onChanged: (value) => setDialogState(() {
-                          propertyCode = value;
-                          visitId = null;
-                        }),
-                      ),
-                      const SizedBox(height: 10),
-                      DropdownButtonFormField<String?>(
-                        initialValue: visitId,
-                        decoration: const InputDecoration(
-                          labelText: 'Visit (optional)',
-                        ),
-                        items: [
-                          const DropdownMenuItem<String?>(
-                            value: null,
-                            child: Text('Not linked to a visit'),
-                          ),
-                          ...provider.visits
-                              .where((v) => v.propertyCode == propertyCode)
-                              .map((v) => DropdownMenuItem<String?>(
-                                    value: v.id,
-                                    child: Text(v.id ?? ''),
-                                  )),
-                        ],
-                        onChanged: (value) =>
-                            setDialogState(() => visitId = value),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                    DropdownButtonFormField<String>(
-                      initialValue: category,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Category'),
-                      items: InspectionGuide.categories
-                          .map((c) =>
-                              DropdownMenuItem(value: c, child: Text(c)))
-                          .toList(),
-                      onChanged: (value) =>
-                          setDialogState(() => category = value ?? category),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: locationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Location',
-                        hintText: 'e.g. North parking lot',
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: issueController,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Issue / deficiency',
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<String>(
-                      initialValue: priority,
-                      decoration: const InputDecoration(labelText: 'Priority'),
-                      items: InspectionGuide.priorities
-                          .map((p) => DropdownMenuItem(
-                                value: p,
-                                child: Text(InspectionGuide.statusLabel(p)),
-                              ))
-                          .toList(),
-                      onChanged: (value) =>
-                          setDialogState(() => priority = value ?? priority),
-                    ),
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<String>(
-                      initialValue: status,
-                      decoration: const InputDecoration(labelText: 'Status'),
-                      items: InspectionGuide.actionStatuses
-                          .map((s) => DropdownMenuItem(
-                                value: s,
-                                child: Text(InspectionGuide.statusLabel(s)),
-                              ))
-                          .toList(),
-                      onChanged: (value) =>
-                          setDialogState(() => status = value ?? status),
-                    ),
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<String>(
-                      initialValue: responsible,
-                      decoration:
-                          const InputDecoration(labelText: 'Responsible party'),
-                      items: InspectionGuide.responsibleParties
-                          .map((r) =>
-                              DropdownMenuItem(value: r, child: Text(r)))
-                          .toList(),
-                      onChanged: (value) => setDialogState(
-                          () => responsible = value ?? responsible),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: ownerController,
-                      decoration:
-                          const InputDecoration(labelText: 'Action owner'),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: costController,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Estimated cost',
-                        prefixText: '\$ ',
-                      ),
-                      onChanged: (_) => setDialogState(() {}),
-                    ),
-                    if (overThreshold)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.account_balance,
-                                size: 14, color: Color(0xFF6A1B9A)),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                'Above the ${_currency.format(InspectionGuide.capitalReviewThreshold)} '
-                                'threshold — requires the capital-work approval process.',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFF6A1B9A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 10),
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: dialogContext,
-                          initialDate: targetDate ?? DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          setDialogState(() => targetDate = picked);
-                        }
-                      },
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Target completion',
-                          suffixIcon: Icon(Icons.calendar_today, size: 18),
-                        ),
-                        child: Text(
-                          targetDate == null
-                              ? 'Not set'
-                              : DateFormat('dd MMM yyyy').format(targetDate!),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: safetyHazard,
-                      onChanged: (value) =>
-                          setDialogState(() => safetyHazard = value ?? false),
-                      title: const Text('Safety hazard',
-                          style: TextStyle(fontSize: 14)),
-                      subtitle: const Text(
-                        'Surfaces separately on the dashboard',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      dense: true,
-                    ),
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: leaseReview,
-                      onChanged: (value) =>
-                          setDialogState(() => leaseReview = value ?? false),
-                      title: const Text('Lease review required',
-                          style: TextStyle(fontSize: 14)),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      dense: true,
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: notesController,
-                      maxLines: 2,
-                      decoration: const InputDecoration(labelText: 'Notes'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (issueController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      const SnackBar(
-                        content: Text('Describe the issue before saving.'),
-                      ),
-                    );
-                    return;
-                  }
-                  if (propertyCode == null) {
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      const SnackBar(content: Text('Select a property.')),
-                    );
-                    return;
-                  }
-                  Navigator.pop(dialogContext, true);
-                },
-                child: Text(isEdit ? 'Save' : 'Add'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-
-    if (saved != true) return;
-
-    final cost = double.tryParse(costController.text.trim());
-    final action = ActionItem(
-      visitId: visitId,
-      propertyCode: propertyCode,
-      location: locationController.text.trim(),
-      category: category,
-      issue: issueController.text.trim(),
-      priority: priority,
-      safetyHazard: safetyHazard,
-      leaseReview: leaseReview,
-      responsibleParty: responsible,
-      actionOwner: ownerController.text.trim(),
-      status: status,
-      targetCompletion:
-          targetDate == null ? null : _isoDate.format(targetDate!),
-      estimatedCost: cost,
-      costClassification:
-          cost != null && cost > InspectionGuide.capitalReviewThreshold
-              ? 'CAPITAL'
-              : 'OPERATING',
-      notes: notesController.text.trim(),
-    );
-
-    final result = isEdit
-        ? await provider.updateAction(existing.id!, action)
-        : await provider.addAction(action);
-
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          result != null
-              ? 'Action ${result.id} saved.'
-              : 'Could not save: ${provider.error ?? "unknown error"}',
-        ),
-        backgroundColor: result != null ? null : Colors.red,
-      ),
-    );
-  }
 }
