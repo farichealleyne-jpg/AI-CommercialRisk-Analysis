@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:policysquare/config/api_keys.dart';
 import 'package:policysquare/data/models/risk_assessment.dart';
 
 class GeminiReportAnalyzer {
-  static const String _apiKey = 'AIzaSyDGqwQryzyXOm1PLT1yhgHWHIsvwID0K-k';
 
   static Future<Map<String, dynamic>> analyzeAssessment(
     RiskAssessment assessment,
@@ -12,7 +12,7 @@ class GeminiReportAnalyzer {
 
     final model = GenerativeModel(
       model: 'gemini-pro-latest',
-      apiKey: _apiKey,
+      apiKey: ApiKeys.gemini,
       generationConfig: GenerationConfig(responseMimeType: 'application/json'),
     );
 

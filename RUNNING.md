@@ -80,6 +80,30 @@ slow or unreachable. With it, everything is served from your own machine.
 For live reload while editing screens, `flutter run -d chrome` is faster — but it
 needs a working Flutter install, which the compiled bundle exists to avoid.
 
+## API keys
+
+The repository holds no API keys. Google Maps and Gemini are read from build-time
+values, and the committed web bundle is built without them, so the features that
+need them are simply inactive: the Risk Assessment screen shows "Map unavailable"
+in place of its map, and AI analysis is off. Nothing else is affected — the whole
+property-management workflow works without either key.
+
+To switch them on, rebuild with your own keys:
+
+```
+flutter build web --release --no-web-resources-cdn \
+  --dart-define=MAPS_API_KEY=<your key> --dart-define=GEMINI_API_KEY=<your key>
+```
+
+The map widget additionally needs the Maps script in `policysquare/web/index.html`;
+that file carries a commented-out tag showing where it goes. **Do not commit it with
+a real key in place** — a key committed to a public repository is public, and must be
+rotated rather than merely deleted.
+
+Restrict any browser key by HTTP referrer in the Google Cloud console. A key the
+browser uses is visible to anyone using the app; referrer restriction, not secrecy,
+is what stops someone else spending against it.
+
 ## When something goes wrong
 
 **`'mvnw.cmd' is not recognized`** — you are in the wrong folder. The command only

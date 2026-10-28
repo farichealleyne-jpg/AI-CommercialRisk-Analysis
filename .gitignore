@@ -24,7 +24,9 @@ policysquare/.flutter-plugins
 policysquare/.flutter-plugins-dependencies
 policysquare/.pub-cache/
 policysquare/.pub/
-policysquare/pubspec.lock
+# pubspec.lock is deliberately tracked: this is an application, not a library,
+# so pinning exact resolved versions is what keeps a checkout building the same
+# way months later instead of silently picking up a broken dependency.
 policysquare/ios/Pods/
 policysquare/ios/.symlinks/
 policysquare/ios/Flutter/Flutter.podspec

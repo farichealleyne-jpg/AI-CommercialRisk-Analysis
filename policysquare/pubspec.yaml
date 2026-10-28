@@ -56,6 +56,11 @@ dependencies:
   syncfusion_flutter_pdf: ^32.2.5
   vector_math: ^2.1.4
   google_generative_ai: ^0.4.7
+  # Pinned: image 4.11.0 declares archive ^4.0.9 but calls ZLibDecoder.decodeLazy,
+  # which only exists from archive 4.4.0, so it fails to compile with the archive
+  # version pdf constrains us to. 4.10.2 is the last release that matches its own
+  # constraint; drop this pin once pdf allows a newer archive.
+  image: 4.10.2
   geolocator: ^14.0.2
   geocoding: ^4.0.0
   google_maps_flutter: ^2.17.0
