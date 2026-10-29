@@ -8,6 +8,7 @@ import com.policysquare.commercial.repository.UserRepository;
 import com.policysquare.commercial.security.CustomUserDetailsService;
 import com.policysquare.commercial.security.JwtUtil;
 import jakarta.validation.Valid;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,15 +33,15 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Username is already taken!");
+            return badRequest("That username is already taken.");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Email is already in use!");
+            return badRequest("That email address is already registered.");
         }
 
         if (userRepository.existsByMobileNumber(request.getMobileNumber())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Mobile number is already in use!");
+            return badRequest("That mobile number is already registered.");
         }
 
         AppUser user = new AppUser();
@@ -66,7 +67,8 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Incorrect username or password."));
         }
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
@@ -75,5 +77,11 @@ public class AuthController {
         AppUser user = userRepository.findByUsername(request.getUsername()).get();
 
         return ResponseEntity.ok(new AuthResponse(jwt, user.getUsername(), user.getMobileNumber(), user.getEmail()));
+    }
+
+    /** Errors must be real JSON: a bare string with a JSON content type
+        fails to parse client-side and the reason is lost. */
+    private ResponseEntity<Map<String, String>> badRequest(String message) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", message));
     }
 }

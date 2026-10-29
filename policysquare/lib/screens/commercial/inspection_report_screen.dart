@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:policysquare/config/api_keys.dart';
 import 'package:dio/dio.dart';
 
 class InspectionReportScreen extends StatefulWidget {
@@ -400,7 +401,7 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
         // Fallback for Web using Google Maps Geocoding API
         try {
           final dio = Dio();
-          final String apiKey = "AIzaSyBZG_0ypwdKza4AceRcCgbFlc9fuT3Ub-c";
+          final String apiKey = ApiKeys.googleMaps;
           final response = await dio.get(
             'https://maps.googleapis.com/maps/api/geocode/json',
             queryParameters: {
@@ -519,7 +520,7 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
     
     try {
       final dio = Dio();
-      final String apiKey = "AIzaSyBZG_0ypwdKza4AceRcCgbFlc9fuT3Ub-c";
+      final String apiKey = ApiKeys.googleMaps;
       final response = await dio.get(
         'https://maps.googleapis.com/maps/api/geocode/json',
         queryParameters: {
@@ -888,7 +889,8 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
               borderRadius: BorderRadius.circular(6),
               child: Builder(
                 builder: (context) {
-                  String staticUrl = 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lon&zoom=14&size=300x120&markers=color:red%7Csize:small%7C${_fetchedLat!},${_fetchedLon!}&key=AIzaSyBZG_0ypwdKza4AceRcCgbFlc9fuT3Ub-c';
+                  if (!ApiKeys.hasGoogleMaps) return const _MapUnavailable();
+                  String staticUrl = 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$lon&zoom=14&size=300x120&markers=color:red%7Csize:small%7C${_fetchedLat!},${_fetchedLon!}&key=${ApiKeys.googleMaps}';
                   if (multiplePoints != null && multiplePoints.isNotEmpty) {
                     for (var p in multiplePoints) {
                       staticUrl += '&markers=color:${color == Colors.blue ? 'blue' : (color == Colors.red ? 'red' : (color == Colors.deepOrange ? 'orange' : 'green'))}%7Clabel:$markerLetter%7C${p['lat']},${p['lon']}';
@@ -1516,7 +1518,7 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
                     borderRadius: BorderRadius.circular(8),
                     child: Builder(
                       builder: (context) {
-                        String staticmapUrl = 'https://maps.googleapis.com/maps/api/staticmap?center=${_fetchedLat!},${_fetchedLon!}&zoom=14&size=600x300&markers=color:red%7C${_fetchedLat!},${_fetchedLon!}&key=AIzaSyBZG_0ypwdKza4AceRcCgbFlc9fuT3Ub-c';
+                        String staticmapUrl = 'https://maps.googleapis.com/maps/api/staticmap?center=${_fetchedLat!},${_fetchedLon!}&zoom=14&size=600x300&markers=color:red%7C${_fetchedLat!},${_fetchedLon!}&key=${ApiKeys.googleMaps}';
                         if (_waterBodyLat != null && _waterBodyLon != null) {
                           staticmapUrl += '&markers=color:blue%7Clabel:W%7C${_waterBodyLat!},${_waterBodyLon!}';
                         }
@@ -1528,6 +1530,7 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
                           staticmapUrl += '&markers=color:green%7Clabel:H%7C${h['lat']},${h['lon']}';
                         }
 
+                        if (!ApiKeys.hasGoogleMaps) return const _MapUnavailable();
                         return (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux))
                           ? Image.network(
                               staticmapUrl,
@@ -3140,7 +3143,7 @@ class _InspectionReportScreenState extends State<InspectionReportScreen> {
     final provider = context.read<CommercialProvider>();
 
     try {
-      final String apiKey = 'AIzaSyBZG_0ypwdKza4AceRcCgbFlc9fuT3Ub-c';
+      final String apiKey = ApiKeys.googleMaps;
       if (_fetchedLat != null && _fetchedLon != null) {
         _formData['locationMapUrl'] = 'https://maps.googleapis.com/maps/api/staticmap?center=${_fetchedLat},${_fetchedLon}&zoom=14&size=400x400&markers=color:red%7Clabel:S%7C${_fetchedLat},${_fetchedLon}&key=$apiKey';
       }
@@ -3566,5 +3569,25 @@ class RiskReportScreen extends StatelessWidget {
     if (rating.contains('Adequate Risk')) return Colors.yellow;
     if (rating.contains('Favourable Risk')) return Colors.lightBlue;
     return Colors.green;
+  }
+}
+
+/// Shown in place of a map when no Google Maps key was supplied at build time,
+/// so the surrounding report still renders instead of failing.
+class _MapUnavailable extends StatelessWidget {
+  const _MapUnavailable();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFECEFF1),
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(12),
+      child: const Text(
+        'Map unavailable — no Google Maps key configured.',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 11, color: Colors.black54),
+      ),
+    );
   }
 }

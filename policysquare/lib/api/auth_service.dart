@@ -15,16 +15,7 @@ class AuthService {
       );
       return response.data;
     } on DioException catch (e) {
-      if (e.response != null && e.response?.data != null) {
-        final data = e.response!.data;
-        if (data is Map) {
-          final messages = data.entries.map((e) => '\${e.key}: \${e.value}').join('\\n');
-          throw Exception(messages.isNotEmpty ? messages : 'Login failed');
-        }
-        throw Exception(data.toString());
-      } else {
-        throw Exception('Network error during login. Details: \${e.error} (Message: \${e.message})');
-      }
+      throw Exception(_readableError(e, 'log in'));
     }
   }
 
@@ -41,16 +32,21 @@ class AuthService {
       );
       return response.data;
     } on DioException catch (e) {
-      if (e.response != null && e.response?.data != null) {
-        final data = e.response!.data;
-        if (data is Map) {
-          final messages = data.entries.map((e) => '\${e.key}: \${e.value}').join('\\n');
-          throw Exception(messages.isNotEmpty ? messages : 'Signup failed');
-        }
-        throw Exception(data.toString());
-      } else {
-        throw Exception('Network error during signup. Details: \${e.error} (Message: \${e.message})');
-      }
+      throw Exception(_readableError(e, 'sign up'));
     }
+  }
+
+  /// The server explains refusals precisely — a taken username, a malformed
+  /// field — so surface that text rather than the transport error wrapping it.
+  String _readableError(DioException error, String action) {
+    final data = error.response?.data;
+    if (data is Map) {
+      final messages = data.values.map((value) => value.toString()).join('\n');
+      if (messages.isNotEmpty) return messages;
+    } else if (data is String && data.isNotEmpty) {
+      return data;
+    }
+    return 'Could not $action. The server could not be reached — check that it '
+        'is still running, then try again.';
   }
 }
